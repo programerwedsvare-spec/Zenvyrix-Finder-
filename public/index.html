@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zenvyrix Finder API</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    background: #0a0b10;
+    color: #f5f5fa;
+    min-height: 100vh;
+    padding: 16px;
+  }
+  .card {
+    background: #14161f;
+    border: 1px solid #6e50ff;
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 720px;
+    margin: 0 auto 16px;
+  }
+  .logo {
+    font-size: 26px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #6e50ff, #50a0ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+  }
+  .sub {
+    color: #96a0b4;
+    text-align: center;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #14dc82;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    background: #14dc82;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50% { opacity: .4; }
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .stat {
+    background: #1e2332;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+  }
+  .val { font-size: 24px; font-weight: 700; color: #6e50ff; }
+  .lbl { font-size: 10px; color: #96a0b4; text-transform: uppercase; margin-top: 4px; }
+  .section {
+    background: #1a1d28;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .section h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #96a0b4;
+    margin-bottom: 8px;
+  }
+  .item {
+    padding: 8px 10px;
+    background: #232838;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    font-size: 12px;
+    font-family: monospace;
+    color: #c8d0e0;
+    word-break: break-all;
+  }
+  .empty { color: #6e788c; font-size: 12px; font-style: italic; }
+  .log-time { color: #6e50ff; margin-right: 8px; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">ZENVYRIX FINDER</div>
+    <div class="sub">API oficial do Zenvyrix Finder</div>
+    <div class="status"><div class="dot"></div><span>Servidor Online</span></div>
+    <div class="stats">
+      <div class="stat"><div class="val" id="u">0</div><div class="lbl">Usuários</div></div>
+      <div class="stat"><div class="val" id="b">0</div><div class="lbl">Blacklist</div></div>
+      <div class="stat"><div class="val" id="l">0</div><div class="lbl">Logs</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section">
+      <h3>Usuários registrados</h3>
+      <div id="users"></div>
+    </div>
+    <div class="section">
+      <h3>Logs recentes</h3>
+      <div id="logs"></div>
+    </div>
+  </div>
+
+  <script>
+    async function load() {
+      try {
+        const s = await (await fetch('/status')).json();
+        document.getElementById('u').textContent = s.users;
+        document.getElementById('b').textContent = s.blacklisted;
+        document.getElementById('l').textContent = s.logs;
+
+        const u = await (await fetch('/zenvyrix/usernames')).text();
+        const uEl = document.getElementById('users');
+        const uList = u.trim() ? u.trim().split('\n') : [];
+        uEl.innerHTML = uList.length
+          ? uList.map(n => `<div class="item">${n}</div>`).join('')
+          : '<div class="empty">Nenhum usuário ainda</div>';
+
+        const l = await (await fetch('/zenvyrix/logs')).json();
+        const lEl = document.getElementById('logs');
+        lEl.innerHTML = l.length
+          ? l.slice(-20).reverse().map(x => {
+              const t = new Date(x.time).toLocaleTimeString('pt-BR');
+              return `<div class="item"><span class="log-time">${t}</span>${x.line}</div>`;
+            }).join('')
+          : '<div class="empty">Nenhum log ainda</div>';
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    load();
+    setInterval(load, 5000);
+  </script>
+</body>
+  </html>
